@@ -8,8 +8,8 @@ const ARQUIVOS_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './icon-192x192.png',
+  './icon-512x512'.png'
 ];
 
 // URLs que NUNCA devem ser interceptadas pelo SW
