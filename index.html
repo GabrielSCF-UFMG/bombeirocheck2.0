@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#c0392b">
+<title>🚒 BombeiroCheck</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#eee;min-height:100vh;padding-bottom:80px}
+header{background:linear-gradient(135deg,#c0392b,#e74c3c);padding:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+header h1{font-size:20px;color:#fff;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.container{padding:14px;max-width:800px;margin:0 auto}
+.card{background:#2a2a2a;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #3a3a3a}
+.card h2{font-size:16px;color:#e74c3c;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+input,select,textarea,button{font-family:inherit;font-size:15px;width:100%;padding:12px;border-radius:8px;border:1px solid #444;background:#1a1a1a;color:#eee;margin-bottom:10px}
+textarea{min-height:60px;resize:vertical}
+button{background:#c0392b;color:#fff;border:none;font-weight:600;cursor:pointer;transition:.2s}
+button:hover{background:#e74c3c}
+button.sec{background:#34495e}
+button.sec:hover{background:#465a70}
+button.ok{background:#27ae60}
+button.warn{background:#f39c12}
+.row{display:flex;gap:8px}
+.row button{flex:1}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;padding:10px;font-size:13px;background:#333}
+.tabs button.active{background:#c0392b}
+.hidden{display:none}
+.status-bar{display:flex;gap:8px;flex-wrap:wrap;padding:10px;background:#1a1a1a;border-radius:8px;margin-bottom:12px;font-size:13px}
+.stat{padding:4px 10px;background:#333;border-radius:20px}
+.compart-title{background:#34495e;color:#fff;padding:10px;border-radius:8px;margin:12px 0 6px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.badge{background:#c0392b;padding:2px 8px;border-radius:10px;font-size:12px}
+.item{background:#1f1f1f;border-left:4px solid #555;padding:12px;margin-bottom:8px;border-radius:8px}
+.item.ok{border-left-color:#27ae60}
+.item.fal{border-left-color:#e74c3c;background:#2a1f1f}
+.item.ava{border-left-color:#f39c12;background:#2a261f}
+.item h4{font-size:14px;margin-bottom:4px}
+.item small{display:block;color:#999;font-size:11px;margin:2px 0}
+.item .row{margin-top:8px}
+.item .row button{padding:8px;font-size:12px}
+.photo-thumb{width:60px;height:60px;object-fit:cover;border-radius:6px;margin:4px 4px 0 0;border:2px solid #444}
+canvas{background:#fff;border-radius:8px;width:100%;height:120px;touch-action:none}
+.fab-voz{position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:#27ae60;font-size:24px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:200;padding:0}
+.fab-voz.rec{background:#e74c3c;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.search-box{position:sticky;top:60px;background:#1a1a1a;padding:8px 0;z-index:50}
+.online-badge{font-size:11px;padding:3px 8px;border-radius:10px;background:#27ae60;margin-left:auto}
+.online-badge.off{background:#7f8c8d}
+.tipo-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.tipo-card{background:linear-gradient(135deg,#2a2a2a,#1f1f1f);border:2px solid #3a3a3a;border-radius:12px;padding:24px 12px;text-align:center;cursor:pointer;transition:.2s;color:#eee}
+.tipo-card:hover{border-color:#e74c3c;background:linear-gradient(135deg,#3a2020,#2a1515);transform:translateY(-2px)}
+.tipo-card .ico{font-size:48px;margin-bottom:8px;display:block}
+.tipo-card .titulo{font-size:16px;font-weight:700;margin-bottom:4px}
+.tipo-card .qtd{font-size:12px;color:#999}
+.cat-section{margin-bottom:16px}
+.cat-titulo{font-size:13px;color:#e74c3c;font-weight:700;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #3a3a3a;letter-spacing:.5px}
+.unid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.unid-card{background:#2a2a2a;border:2px solid #3a3a3a;border-radius:10px;padding:14px 8px;text-align:center;cursor:pointer;transition:.15s;color:#eee;font-weight:600;font-size:13px}
+.unid-card:hover{border-color:#e74c3c;background:#332020;transform:scale(1.03)}
+.unid-card .ico-mini{font-size:22px;display:block;margin-bottom:4px}
+.unid-card .qtd-itens{font-size:10px;color:#888;font-weight:400;margin-top:2px}
+#painelAdmin{border:2px dashed #f39c12}
+#painelAdmin h2{color:#f39c12}
+.admin-tag{font-size:10px;background:#f39c12;color:#000;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:700}
+.aviso-vazio{text-align:center;padding:30px 14px;color:#888}
+.aviso-vazio .ico-big{font-size:48px;display:block;margin-bottom:10px}
+.tour-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.tour-overlay.ativo{display:flex}
+.tour-card{background:linear-gradient(135deg,#2a2a2a,#1f1f1f);border-radius:16px;padding:28px 22px;max-width:400px;width:100%;color:#fff;text-align:center;border:2px solid #c0392b;position:relative}
+.tour-icone{font-size:64px;margin-bottom:12px;display:block;animation:tourBounce 1.2s ease infinite}
+.tour-titulo{font-size:22px;font-weight:800;margin-bottom:10px}
+.tour-texto{font-size:14px;line-height:1.5;color:#ccc;margin-bottom:18px}
+.tour-texto strong{color:#e74c3c}
+.tour-progresso{display:flex;gap:6px;justify-content:center;margin-bottom:18px}
+.tour-bolinha{width:8px;height:8px;border-radius:50%;background:#444;transition:all .3s}
+.tour-bolinha.ativa{background:#e74c3c;width:24px;border-radius:4px}
+.tour-botoes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tour-btn{padding:10px 20px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;width:auto;margin:0}
+.tour-btn.primario{background:#c0392b;color:#fff}
+.tour-btn.primario:hover{background:#e74c3c}
+.tour-btn.secundario{background:#34495e;color:#fff}
+.tour-pular{position:absolute;top:-30px;right:0;background:transparent;border:none;color:#999;cursor:pointer;font-size:12px;text-decoration:underline;width:auto;padding:4px;margin:0}
+.fab-help{position:fixed;bottom:20px;left:20px;width:48px;height:48px;border-radius:50%;background:#3498db;font-size:22px;font-weight:700;box-shadow:0 4px 15px rgba(52,152,219,.5);z-index:200;padding:0;color:#fff;border:none;cursor:pointer}
+.dica-tooltip{position:fixed;bottom:78px;left:20px;max-width:280px;background:#2a2a2a;color:#fff;padding:14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:201;display:none;border:2px solid #3498db}
+.dica-tooltip.ativa{display:block}
+.dica-tit{font-size:13px;font-weight:700;margin-bottom:6px;color:#3498db}
+.dica-txt{font-size:12px;line-height:1.5;color:#ddd}
+.dica-fechar{position:absolute;top:6px;right:8px;background:none;border:none;color:#888;cursor:pointer;font-size:16px;width:auto;padding:2px;margin:0}
+.update-banner{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;padding:14px 18px;border-radius:12px;box-shadow:0 8px 30px rgba(39,174,96,.6);z-index:9998;max-width:92%;width:340px;text-align:center;display:none}
+.update-banner.ativo{display:block}
+.update-tit{font-size:14px;font-weight:700;margin-bottom:10px}
+.update-btns{display:flex;gap:8px;justify-content:center}
+.update-btns button{width:auto;padding:8px 16px;font-size:13px;font-weight:700;margin:0;border-radius:8px;border:none;cursor:pointer}
+.update-btn-primary{background:#fff;color:#27ae60}
+.update-btn-secondary{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4)!important}
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid #ffffff44;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes tourBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="logoApp">🚒 BombeiroCheck <span id="onlineBadge" class="online-badge">● verificando</span></h1>
+</header>
+
+<div class="tour-overlay" id="tourOverlay">
+  <div style="position:relative;width:100%;max-width:400px">
+    <button class="tour-pular" onclick="pularTour()">Pular tutorial ✕</button>
+    <div class="tour-card" id="tourCard"></div>
+  </div>
+</div>
+
+<button class="fab-help" id="btnHelp" onclick="toggleDica()" title="Ajuda">?</button>
+<div class="dica-tooltip" id="dicaTooltip">
+  <button class="dica-fechar" onclick="fecharDica()">✕</button>
+  <div class="dica-tit" id="dicaTit">💡 Dica</div>
+  <div class="dica-txt" id="dicaTxt"></div>
+</div>
+
+<div class="update-banner" id="bannerUpdate">
+  <div class="update-tit">🎉 Nova versão disponível!</div>
+  <div class="update-btns">
+    <button class="update-btn-primary" onclick="aplicarUpdate()">🔄 Atualizar agora</button>
+    <button class="update-btn-secondary" onclick="document.getElementById('bannerUpdate').classList.remove('ativo')">Depois</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- HOME -->
+  <div id="tela-home">
+    <div class="card">
+      <h2>👤 Identificação</h2>
+      <input id="meuNome" placeholder="Seu nome de guerra">
+      <input id="minhaMat" placeholder="Matrícula">
+      <button onclick="salvarMilitar()">💾 Salvar</button>
+    </div>
+
+    <div class="card hidden" id="painelAdmin">
+      <h2>🔧 Área Admin <span class="admin-tag">RESTRITO</span></h2>
+      <small style="color:#aaa;display:block;margin-bottom:10px">
+        O mapa de carga é carregado automaticamente da Planilha Google.<br>
+        Edite a planilha e toque em "Recarregar Mapa" para atualizar.
+      </small>
+      <button class="ok" onclick="recarregarMapa()">🔄 Recarregar Mapa da Planilha</button>
+      <button class="sec" style="margin-top:6px" onclick="fecharAdmin()">✖️ Fechar admin</button>
+    </div>
+
+    <div class="card">
+      <h2>📋 Iniciar Conferência</h2>
+      <div id="etapa-tipo">
+        <label style="font-size:13px;color:#aaa;display:block;margin-bottom:8px">O que você vai conferir?</label>
+        <div class="tipo-cards">
+          <div class="tipo-card" onclick="selecionarTipo('VIATURA')">
+            <span class="ico">🚒</span>
+            <div class="titulo">VIATURA</div>
+            <div class="qtd" id="qtdViaturas">— unidades</div>
+          </div>
+          <div class="tipo-card" onclick="selecionarTipo('SETOR')">
+            <span class="ico">🏢</span>
+            <div class="titulo">SETOR/SALA</div>
+            <div class="qtd" id="qtdSetores">— unidades</div>
+          </div>
+        </div>
+        <div id="avisoVazio" class="hidden aviso-vazio">
+          <span class="ico-big">📭</span>
+          <div><b>Carregando mapa de carga...</b></div>
+          <small id="avisoVazioTxt">Aguarde a sincronização com a planilha</small>
+        </div>
+      </div>
+      <div id="etapa-unidade" class="hidden">
+        <button class="sec" onclick="voltarTipo()" style="margin-bottom:10px">← Voltar</button>
+        <div id="listaUnidades"></div>
+      </div>
+      <div id="etapa-config" class="hidden">
+        <button class="sec" onclick="voltarUnidade()" style="margin-bottom:10px">← Voltar</button>
+        <div style="background:#1a1a1a;padding:14px;border-radius:8px;margin-bottom:12px;text-align:center">
+          <div style="font-size:11px;color:#999">Conferindo:</div>
+          <div id="unidadeEscolhida" style="font-size:22px;font-weight:700;color:#e74c3c;margin-top:4px"></div>
+        </div>
+        <label style="font-size:13px;color:#aaa">Seu papel:</label>
+        <div class="tabs">
+          <button class="active" onclick="setPapel(this,'entrante')">🟢 Entrante</button>
+          <button onclick="setPapel(this,'sainte')">🔴 Sainte</button>
+        </div>
+        <label style="font-size:13px;color:#aaa">Modo:</label>
+        <div class="tabs">
+          <button class="active" onclick="setModo(this,'completo')">📝 Completo</button>
+          <button onclick="setModo(this,'rapido')">⚡ Rápido</button>
+        </div>
+        <button onclick="iniciarConferencia()">▶️ Começar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📚 Histórico</h2>
+      <button class="sec" onclick="abrirHistorico()">📜 Ver passagens anteriores</button>
+    </div>
+  </div>
+
+  <!-- CONFERÊNCIA -->
+  <div id="tela-conf" class="hidden">
+    <div class="card">
+      <button class="sec" onclick="voltarHome()" style="margin-bottom:10px">← Voltar</button>
+      <h2 id="tituloConf">Conferência</h2>
+      <div class="status-bar" id="statusBar"></div>
+      <div class="search-box">
+        <input id="busca" placeholder="🔍 Buscar item..." oninput="renderItens()">
+      </div>
+      <div id="listaItens"></div>
+      <button onclick="finalizarConferencia()" style="margin-top:14px">✅ Finalizar e Assinar</button>
+    </div>
+  </div>
+
+  <!-- ASSINATURA -->
+  <div id="tela-sign" class="hidden">
+    <div class="card">
+      <h2>✍️ Assinaturas</h2>
+      <textarea id="obsGeral" placeholder="Observações gerais da passagem..."></textarea>
+      <h3 style="margin:12px 0 6px;color:#e74c3c;font-size:14px">🔴 Sainte (quem entrega)</h3>
+      <input id="nomeSainte" placeholder="Nome do sainte">
+      <canvas id="sigSainte"></canvas>
+      <button class="sec" onclick="limparSig('sigSainte')">🧹 Limpar</button>
+      <h3 style="margin:12px 0 6px;color:#27ae60;font-size:14px">🟢 Entrante (quem recebe)</h3>
+      <input id="nomeEntrante" placeholder="Nome do entrante">
+      <canvas id="sigEntrante"></canvas>
+      <button class="sec" onclick="limparSig('sigEntrante')">🧹 Limpar</button>
+      <button onclick="gerarRelatorio()" style="margin-top:14px">📄 Gerar PDF & Salvar</button>
+      <button class="sec" onclick="document.getElementById('tela-sign').classList.add('hidden');document.getElementById('tela-conf').classList.remove('hidden')">← Voltar</button>
+    </div>
+  </div>
+
+</div>
+
+<button class="fab-voz" id="btnVoz" onclick="toggleVoz()" title="Comando de voz">🎤</button>
+
+<!-- SERVICE WORKER -->
+<script>
+let swRegistro = null;
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => {
+        swRegistro = reg;
+        setInterval(() => reg.update().catch(() => {}), 30000);
+        reg.addEventListener('updatefound', () => {
+          const novo = reg.installing;
+          if (!novo) return;
+          novo.addEventListener('statechange', () => {
+            if (novo.state === 'installed' && navigator.serviceWorker.controller) {
+              document.getElementById('bannerUpdate').classList.add('ativo');
+            }
+          });
+        });
+      }).catch(e => console.warn('SW falhou:', e));
+
+    let recarregando = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (recarregando) return;
+      recarregando = true;
+      window.location.reload();
+    });
+  });
+}
+function aplicarUpdate() {
+  if (swRegistro && swRegistro.waiting) {
+    swRegistro.waiting.postMessage('SKIP_WAITING');
+  } else {
+    window.location.reload();
+  }
+}
+</script>
+
+<!-- jsPDF -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<!-- APP PRINCIPAL -->
+<script>
+// ══════════════════════════════════════════
+// CONFIGURAÇÃO — cole a URL do seu Web App
+// ══════════════════════════════════════════
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwGtTQ5hOyXvb7rWevZ729p8B1TQBXzY13eTbs5prKdaXwwQTSVJ1iPLrLks0kQzze7Gg/exec';
+const SENHA_ADMIN = 'SdSouzaCosta';
+
+// ══════════════════════════════════════════
+// ESTADO GLOBAL
+// ══════════════════════════════════════════
+const S = {
+  militar:       JSON.parse(localStorage.getItem('militar') || 'null'),
+  mapa:          JSON.parse(localStorage.getItem('mapa')    || 'null'),
+  tipoEscolhido: null,
+  unidadeAtual:  null,
+  papel:         'entrante',
+  modo:          'completo',
+  conferencia:   {},
+  recognition:   null,
+  ouvindo:       false,
+  cliquesLogo:   0,
+  timerLogo:     null
+};
+
+// ══════════════════════════════════════════
+// MÓDULO GOOGLE SHEETS
+// ══════════════════════════════════════════
+const gsheets = {
+  async carregarMapa() {
+    const res = await fetch(`${SHEETS_URL}?acao=carregarMapa`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.erro) throw new Error(data.erro);
+    return data.mapa;
+  },
+  async salvarPassagem(registro) {
+    const res = await fetch(SHEETS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ acao: 'salvarPassagem', registro })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  },
+  async carregarHistorico() {
+    const res = await fetch(`${SHEETS_URL}?acao=carregarHistorico`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    return data.historico || [];
+  }
+};
+
+// ══════════════════════════════════════════
+// INICIALIZAÇÃO
+// ══════════════════════════════════════════
+window.addEventListener('load', () => {
+  if (S.militar) {
+    document.getElementById('meuNome').value = S.militar.nome;
+    document.getElementById('minhaMat').value = S.militar.mat;
+  }
+
+  // Badge online/offline
+  const badge = document.getElementById('onlineBadge');
+  const atualizarBadge = () => {
+    if (navigator.onLine) {
+      badge.textContent = '● online';
+      badge.classList.remove('off');
+    } else {
+      badge.textContent = '● offline';
+      badge.classList.add('off');
+    }
+  };
+  window.addEventListener('online',  atualizarBadge);
+  window.addEventListener('offline', atualizarBadge);
+  atualizarBadge();
+
+  // Carrega mapa
+  atualizarContadores();
+  setTimeout(carregarMapaNuvem, 800);
+
+  initVoz();
+  initAdminLogo();
+
+  if (!localStorage.getItem('tour_completado')) {
+    setTimeout(() => iniciarTour(), 1000);
+  }
+});
+
+// ══════════════════════════════════════════
+// CARREGAR MAPA DA PLANILHA
+// ══════════════════════════════════════════
+async function carregarMapaNuvem() {
+  const aviso = document.getElementById('avisoVazioTxt');
+  if (aviso) aviso.textContent = 'Carregando da planilha...';
+
+  try {
+    const mapa = await gsheets.carregarMapa();
+    if (mapa && Object.keys(mapa).length > 0) {
+      S.mapa = mapa;
+      localStorage.setItem('mapa', JSON.stringify(mapa));
+      console.log(`✅ Mapa carregado: ${Object.keys(mapa).length} unidades`);
+    } else if (!S.mapa) {
+      if (aviso) aviso.textContent = 'Nenhum dado encontrado na planilha.';
+    }
+  } catch (e) {
+    console.warn('Offline ou erro ao carregar mapa:', e.message);
+    if (!S.mapa && aviso) {
+      aviso.textContent = 'Sem conexão. Usando dados locais.';
+    }
+  }
+  atualizarContadores();
+}
+
+async function recarregarMapa() {
+  const btn = event.target;
+  btn.innerHTML = '<span class="spinner"></span> Carregando...';
+  btn.disabled = true;
+  try {
+    const mapa = await gsheets.carregarMapa();
+    if (mapa && Object.keys(mapa).length > 0) {
+      S.mapa = mapa;
+      localStorage.setItem('mapa', JSON.stringify(mapa));
+      atualizarContadores();
+      alert(`✅ Mapa atualizado!\n${Object.keys(mapa).length} unidades carregadas.`);
+    } else {
+      alert('⚠️ Planilha retornou vazia. Verifique se há dados nas abas.');
+    }
+  } catch (e) {
+    alert('❌ Erro ao carregar: ' + e.message);
+  }
+  btn.innerHTML = '🔄 Recarregar Mapa da Planilha';
+  btn.disabled = false;
+}
+
+// ══════════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════════
+function initAdminLogo() {
+  document.getElementById('logoApp').addEventListener('click', () => {
+    S.cliquesLogo++;
+    clearTimeout(S.timerLogo);
+    S.timerLogo = setTimeout(() => S.cliquesLogo = 0, 2000);
+    if (S.cliquesLogo >= 5) {
+      S.cliquesLogo = 0;
+      const senha = prompt('🔐 Senha de administrador:');
+      if (senha === SENHA_ADMIN) {
+        document.getElementById('painelAdmin').classList.remove('hidden');
+        alert('✅ Modo admin ativado!');
+      } else if (senha !== null) {
+        alert('❌ Senha incorreta');
+      }
+    }
+  });
+}
+function fecharAdmin() {
+  document.getElementById('painelAdmin').classList.add('hidden');
+}
+
+// ══════════════════════════════════════════
+// MILITAR
+// ══════════════════════════════════════════
+function salvarMilitar() {
+  const nome = document.getElementById('meuNome').value.trim();
+  const mat  = document.getElementById('minhaMat').value.trim();
+  if (!nome || !mat) return alert('Preencha nome e matrícula');
+  S.militar = { nome, mat };
+  localStorage.setItem('militar', JSON.stringify(S.militar));
+  alert('✅ Salvo!');
+}
+
+// ══════════════════════════════════════════
+// CONTADORES E CATEGORIAS
+// ══════════════════════════════════════════
+function atualizarContadores() {
+  const aviso = document.getElementById('avisoVazio');
+  if (!S.mapa || Object.keys(S.mapa).length === 0) {
+    document.getElementById('qtdViaturas').textContent = '— unidades';
+    document.getElementById('qtdSetores').textContent  = '— unidades';
+    aviso.classList.remove('hidden');
+    return;
+  }
+  aviso.classList.add('hidden');
+  let v = 0, s = 0;
+  Object.values(S.mapa).forEach(u => { if (u.tipo === 'VIATURA') v++; else s++; });
+  document.getElementById('qtdViaturas').textContent = `${v} unidade${v !== 1 ? 's' : ''}`;
+  document.getElementById('qtdSetores').textContent  = `${s} unidade${s !== 1 ? 's' : ''}`;
+}
+
+function categorizarUnidade(nome, tipo) {
+  const n = nome.toUpperCase();
+  if (tipo === 'VIATURA') {
+    if (n.startsWith('ABTS') || n.startsWith('ATB')) return '⛽ Combate a Incêndio';
+    if (n.startsWith('ASF') || n.startsWith('ACIF')) return '🌳 Incêndio Florestal';
+    if (n.startsWith('ASM') || n.startsWith('ASL') || n.startsWith('ASA')) return '⛰️ Salvamento';
+    if (n.startsWith('UR')  || n.startsWith('USA')) return '🚑 Resgate / APH';
+    return '🚒 Outras Viaturas';
+  } else {
+    if (n.includes('OPERACIO') || n === 'SOU') return '🏢 Operacional';
+    if (n.includes('MEIO') || n.includes('ADMIN')) return '📦 Administrativo';
+    if (n.includes('MERGULHO') || n.includes('FLORESTAL')) return '🤿 Especializado';
+    if (n.includes('OFICINA') || n.includes('MANUT')) return '🔧 Manutenção';
+    return '🏢 Outros Setores';
+  }
+}
+
+function iconeUnidade(nome, tipo) {
+  const n = nome.toUpperCase();
+  if (tipo === 'VIATURA') {
+    if (n.startsWith('ABTS') || n.startsWith('ATB')) return '🚒';
+    if (n.startsWith('ASF') || n.startsWith('ACIF')) return '🌲';
+    if (n.startsWith('ASM') || n.startsWith('ASL')) return '⛑️';
+    if (n.startsWith('UR')) return '🚑';
+    return '🚐';
+  } else {
+    if (n === 'SOU') return '📊';
+    if (n.includes('MEIO')) return '📦';
+    if (n.includes('MERGULHO')) return '🤿';
+    if (n.includes('OFICINA')) return '🔧';
+    return '🏢';
+  }
+}
+
+// ══════════════════════════════════════════
+// SELEÇÃO DE TIPO / UNIDADE
+// ══════════════════════════════════════════
+function selecionarTipo(tipo) {
+  if (!S.mapa) return alert('Aguarde o mapa carregar');
+  S.tipoEscolhido = tipo;
+  const unidades = Object.values(S.mapa).filter(u => u.tipo === tipo);
+  if (!unidades.length) return alert(`Nenhuma ${tipo.toLowerCase()} cadastrada`);
+
+  const grupos = {};
+  unidades.forEach(u => {
+    const cat = categorizarUnidade(u.nome, tipo);
+    if (!grupos[cat]) grupos[cat] = [];
+    grupos[cat].push(u);
+  });
+
+  const cont = document.getElementById('listaUnidades');
+  cont.innerHTML = '';
+  Object.entries(grupos).forEach(([cat, uns]) => {
+    const sec = document.createElement('div');
+    sec.className = 'cat-section';
+    sec.innerHTML = `<div class="cat-titulo">${cat}</div><div class="unid-grid"></div>`;
+    const grid = sec.querySelector('.unid-grid');
+    uns.forEach(u => {
+      const total = Object.values(u.compartimentos || {}).reduce((s, arr) => s + arr.length, 0);
+      const card = document.createElement('div');
+      card.className = 'unid-card';
+      card.innerHTML = `
+        <span class="ico-mini">${iconeUnidade(u.nome, tipo)}</span>
+        ${u.nome}
+        <div class="qtd-itens">${total} itens</div>`;
+      card.onclick = () => selecionarUnidade(u.nome);
+      grid.appendChild(card);
+    });
+    cont.appendChild(sec);
+  });
+
+  document.getElementById('etapa-tipo').classList.add('hidden');
+  document.getElementById('etapa-unidade').classList.remove('hidden');
+}
+
+function selecionarUnidade(nome) {
+  S.unidadeAtual = S.mapa[nome];
+  document.getElementById('unidadeEscolhida').textContent =
+    `${iconeUnidade(nome, S.tipoEscolhido)} ${nome}`;
+  document.getElementById('etapa-unidade').classList.add('hidden');
+  document.getElementById('etapa-config').classList.remove('hidden');
+}
+
+function voltarTipo() {
+  document.getElementById('etapa-unidade').classList.add('hidden');
+  document.getElementById('etapa-tipo').classList.remove('hidden');
+}
+function voltarUnidade() {
+  document.getElementById('etapa-config').classList.add('hidden');
+  document.getElementById('etapa-unidade').classList.remove('hidden');
+}
+function setPapel(btn, p) {
+  S.papel = p;
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function setModo(btn, m) {
+  S.modo = m;
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════
+// CONFERÊNCIA
+// ══════════════════════════════════════════
+function iniciarConferencia() {
+  if (!S.militar)    return alert('Cadastre seu nome primeiro');
+  if (!S.unidadeAtual) return alert('Selecione uma unidade');
+
+  S.conferencia = {};
+  Object.values(S.unidadeAtual.compartimentos).flat().forEach(it => {
+    S.conferencia[it.id] = {
+      status: S.modo === 'rapido' ? 'OK' : 'PEND',
+      qtdEnc: it.qtd, obs: '', fotos: []
+    };
+  });
+
+  document.getElementById('tituloConf').textContent = '📋 ' + S.unidadeAtual.nome;
+  document.getElementById('tela-home').classList.add('hidden');
+  document.getElementById('tela-conf').classList.remove('hidden');
+  renderItens();
+}
+
+function renderItens() {
+  const busca = document.getElementById('busca').value.toLowerCase();
+  const cont  = document.getElementById('listaItens');
+  cont.innerHTML = '';
+  let total = 0, ok = 0, fal = 0, ava = 0, pend = 0;
+
+  Object.entries(S.unidadeAtual.compartimentos).forEach(([comp, itens]) => {
+    const filtrados = itens.filter(it =>
+      !busca || it.material.toLowerCase().includes(busca) || comp.toLowerCase().includes(busca)
+    );
+    if (!filtrados.length) return;
+
+    const tit = document.createElement('div');
+    tit.className = 'compart-title';
+    tit.innerHTML = `<span>📦 ${comp}</span><span class="badge">${filtrados.length}</span>`;
+    const wrap = document.createElement('div');
+    tit.onclick = () => wrap.classList.toggle('hidden');
+    cont.appendChild(tit);
+
+    filtrados.forEach(it => {
+      const c = S.conferencia[it.id];
+      total++;
+      if (c.status === 'OK') ok++;
+      else if (c.status === 'FAL') fal++;
+      else if (c.status === 'AVA') ava++;
+      else pend++;
+
+      const div = document.createElement('div');
+      div.className = 'item ' + (c.status==='OK'?'ok':c.status==='FAL'?'fal':c.status==='AVA'?'ava':'');
+      div.innerHTML = `
+        <h4>${it.material} <span style="float:right;color:#c0392b">×${it.qtd}</span></h4>
+        ${it.patrimonio ? `<small>🏷️ Patrim: ${it.patrimonio}</small>` : ''}
+        ${it.serie      ? `<small>🔢 Série: ${it.serie}</small>`       : ''}
+        ${it.obs        ? `<small>📝 ${it.obs}</small>`                : ''}
+        <div class="row">
+          <button class="ok"   onclick="setStatus('${it.id}','OK')">✅ OK</button>
+          <button class="warn" onclick="setStatus('${it.id}','AVA')">⚠️ Avariado</button>
+          <button             onclick="setStatus('${it.id}','FAL')">❌ Faltando</button>
+        </div>
+        ${c.status==='FAL'||c.status==='AVA' ? `
+          <textarea placeholder="Observação..." onchange="setObs('${it.id}',this.value)">${c.obs}</textarea>
+          <div class="row"><button class="sec" onclick="tirarFoto('${it.id}')">📸 Foto</button></div>
+          <div>${c.fotos.map(f=>`<img class="photo-thumb" src="${f}">`).join('')}</div>
+        ` : ''}`;
+      wrap.appendChild(div);
+    });
+    cont.appendChild(wrap);
+  });
+
+  document.getElementById('statusBar').innerHTML = `
+    <span class="stat">📋 <b>${total}</b></span>
+    <span class="stat">✅ <b>${ok}</b></span>
+    <span class="stat">❌ <b>${fal}</b></span>
+    <span class="stat">⚠️ <b>${ava}</b></span>
+    ${pend ? `<span class="stat">⏳ <b>${pend}</b></span>` : ''}`;
+}
+
+function setStatus(id, st) { S.conferencia[id].status = st; renderItens(); }
+function setObs(id, v)     { S.conferencia[id].obs    = v; }
+
+function tirarFoto(id) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const cv = document.createElement('canvas');
+        const max = 600; let w = img.width, h = img.height;
+        if (w > h && w > max) { h = h*max/w; w = max; }
+        else if (h > max) { w = w*max/h; h = max; }
+        cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        if (S.conferencia[id].fotos.length >= 3) return alert('Máximo 3 fotos');
+        S.conferencia[id].fotos.push(cv.toDataURL('image/jpeg', 0.5));
+        renderItens();
+      };
+      img.src = ev.target.result;
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+// ══════════════════════════════════════════
+// VOZ
+// ══════════════════════════════════════════
+function initVoz() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { document.getElementById('btnVoz').style.display = 'none'; return; }
+  S.recognition = new SR();
+  S.recognition.lang = 'pt-BR';
+  S.recognition.continuous = true;
+  S.recognition.interimResults = false;
+  S.recognition.onresult = e => {
+    const txt = e.results[e.results.length-1][0].transcript.toLowerCase().trim();
+    processarVoz(txt);
+  };
+  S.recognition.onend = () => { if (S.ouvindo) try { S.recognition.start(); } catch(e) {} };
+  S.recognition.onerror = e => console.warn('Voz:', e.error);
+}
+function toggleVoz() {
+  if (!S.recognition) return alert('Voz não suportada neste navegador');
+  S.ouvindo = !S.ouvindo;
+  const b = document.getElementById('btnVoz');
+  if (S.ouvindo) {
+    try { S.recognition.start(); } catch(e) {}
+    b.classList.add('rec');
+    falar('Ouvindo. Diga o item seguido de OK, faltando ou avariado.');
+  } else {
+    S.recognition.stop();
+    b.classList.remove('rec');
+  }
+}
+function falar(t) {
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = 'pt-BR'; u.rate = 1.1; speechSynthesis.speak(u);
+}
+function processarVoz(txt) {
+  if (!S.unidadeAtual) return;
+  if (txt.includes('finalizar') || txt.includes('concluir')) { finalizarConferencia(); return; }
+
+  let status = null;
+  if (txt.match(/\b(ok|conforme|presente|certo|tem)\b/))         status = 'OK';
+  else if (txt.match(/\b(falt|ausent|nao tem|não tem)/))         status = 'FAL';
+  else if (txt.match(/\b(avari|quebr|danific|defeit|ruim)/))     status = 'AVA';
+  if (!status) { falar('Não entendi'); return; }
+
+  const itens = Object.values(S.unidadeAtual.compartimentos).flat();
+  const palavras = txt.replace(/\b(ok|falta|faltando|avariado|quebrado|conforme|presente|tem|nao|não)\b/g,'')
+    .trim().split(/\s+/).filter(p => p.length > 2);
+
+  let melhor = null, score = 0;
+  itens.forEach(it => {
+    const m = it.material.toLowerCase();
+    let s = 0;
+    palavras.forEach(p => { if (m.includes(p)) s++; });
+    if (s > score) { score = s; melhor = it; }
+  });
+
+  if (melhor && score > 0) {
+    S.conferencia[melhor.id].status = status;
+    renderItens();
+    falar(melhor.material + ' ' + (status==='OK'?'conforme':status==='FAL'?'faltando':'avariado'));
+  } else {
+    falar('Item não encontrado');
+  }
+}
+
+// ══════════════════════════════════════════
+// ASSINATURA E PDF
+// ══════════════════════════════════════════
+function finalizarConferencia() {
+  document.getElementById('tela-conf').classList.add('hidden');
+  document.getElementById('tela-sign').classList.remove('hidden');
+  setTimeout(() => {
+    initCanvas('sigSainte');
+    initCanvas('sigEntrante');
+  }, 100);
+  if (S.papel === 'sainte')    document.getElementById('nomeSainte').value   = S.militar.nome;
+  else                         document.getElementById('nomeEntrante').value = S.militar.nome;
+}
+
+function initCanvas(id) {
+  const c = document.getElementById(id);
+  c.width = c.offsetWidth;
+  const ctx = c.getContext('2d');
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  let drawing = false;
+  const pos = e => {
+    const r = c.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return [t.clientX - r.left, t.clientY - r.top];
+  };
+  const start = e => { e.preventDefault(); drawing = true; const [x,y] = pos(e); ctx.beginPath(); ctx.moveTo(x,y); };
+  const move  = e => { if (!drawing) return; e.preventDefault(); const [x,y] = pos(e); ctx.lineTo(x,y); ctx.stroke(); };
+  const end   = () => drawing = false;
+  c.onmousedown = start; c.onmousemove = move; c.onmouseup = end; c.onmouseleave = end;
+  c.ontouchstart = start; c.ontouchmove = move; c.ontouchend = end;
+}
+function limparSig(id) {
+  const c = document.getElementById(id);
+  c.getContext('2d').clearRect(0, 0, c.width, c.height);
+}
+
+async function gerarRelatorio() {
+  const { jsPDF } = window.jspdf;
+  const pdf  = new jsPDF();
+  const u    = S.unidadeAtual;
+  const data = new Date().toLocaleString('pt-BR');
+
+  pdf.setFillColor(192, 57, 43); pdf.rect(0, 0, 210, 25, 'F');
+  pdf.setTextColor(255); pdf.setFontSize(16);
+  pdf.text('PASSAGEM DE SERVICO - ' + u.nome, 10, 16);
+
+  pdf.setTextColor(0); pdf.setFontSize(10);
+  let y = 35;
+  pdf.text(`Data: ${data}`, 10, y); y += 6;
+  pdf.text(`Sainte: ${document.getElementById('nomeSainte').value}`, 10, y); y += 6;
+  pdf.text(`Entrante: ${document.getElementById('nomeEntrante').value}`, 10, y); y += 8;
+
+  let ok = 0, fal = 0, ava = 0, totalFotos = 0;
+  Object.values(S.conferencia).forEach(c => {
+    if (c.status==='OK') ok++;
+    else if (c.status==='FAL') fal++;
+    else if (c.status==='AVA') ava++;
+    if (c.fotos) totalFotos += c.fotos.length;
+  });
+
+  pdf.setFontSize(11);
+  pdf.text(`Resumo: ${ok} OK | ${fal} Faltando | ${ava} Avariado`, 10, y); y += 8;
+
+  pdf.setFontSize(12); pdf.setFont(undefined, 'bold');
+  pdf.text('ITENS COM OCORRENCIA:', 10, y); y += 7;
+  pdf.setFont(undefined, 'normal'); pdf.setFontSize(9);
+
+  Object.entries(u.compartimentos).forEach(([comp, itens]) => {
+    itens.forEach(it => {
+      const c = S.conferencia[it.id];
+      if (c.status !== 'FAL' && c.status !== 'AVA') return;
+      if (y > 270 - (c.fotos?.length > 0 ? 60 : 12)) { pdf.addPage(); y = 20; }
+      if (c.status === 'FAL') {
+        pdf.setTextColor(231, 76, 60);
+        pdf.text(`[FALTANDO] ${comp} - ${it.material}`, 10, y);
+      } else {
+        pdf.setTextColor(243, 156, 18);
+        pdf.text(`[AVARIADO] ${comp} - ${it.material}`, 10, y);
+      }
+      pdf.setTextColor(0); y += 5;
+      if (c.obs) {
+        const ls = pdf.splitTextToSize(`  Obs: ${c.obs}`, 180);
+        pdf.text(ls, 10, y); y += ls.length * 4 + 1;
+      }
+      if (c.fotos?.length > 0) {
+        let xF = 12;
+        if (y + 55 > 280) { pdf.addPage(); y = 20; }
+        c.fotos.forEach(foto => {
+          try {
+            if (xF + 50 > 200) { xF = 12; y += 55; }
+            pdf.addImage(foto, 'JPEG', xF, y, 50, 50);
+            xF += 55;
+          } catch (err) {}
+        });
+        y += 56;
+      }
+      y += 2;
+    });
+  });
+
+  const obs = document.getElementById('obsGeral').value;
+  if (obs) {
+    if (y > 250) { pdf.addPage(); y = 20; }
+    y += 4; pdf.setFontSize(11); pdf.setFont(undefined, 'bold');
+    pdf.text('Observacoes gerais:', 10, y); y += 6;
+    pdf.setFont(undefined, 'normal'); pdf.setFontSize(10);
+    const ls = pdf.splitTextToSize(obs, 190);
+    pdf.text(ls, 10, y); y += ls.length * 5 + 4;
+  }
+
+  if (y > 230) { pdf.addPage(); y = 20; }
+  y += 10;
+  try {
+    pdf.addImage(document.getElementById('sigSainte').toDataURL(),   'PNG', 10,  y, 80, 30);
+    pdf.addImage(document.getElementById('sigEntrante').toDataURL(), 'PNG', 110, y, 80, 30);
+  } catch (e) {}
+  pdf.line(10,  y+32, 90,  y+32);
+  pdf.line(110, y+32, 190, y+32);
+  pdf.setFontSize(9);
+  pdf.text('Sainte: '   + document.getElementById('nomeSainte').value,   10,  y+37);
+  pdf.text('Entrante: ' + document.getElementById('nomeEntrante').value, 110, y+37);
+
+  pdf.save(`passagem_${u.nome}_${Date.now()}.pdf`);
+
+  // Salvar na planilha
+  let nuvem = false;
+  try {
+    const reg = {
+      unidade: u.nome, data: new Date().toISOString(),
+      sainte:   document.getElementById('nomeSainte').value,
+      entrante: document.getElementById('nomeEntrante').value,
+      obs, resumo: { ok, fal, ava },
+      conferencia: S.conferencia,
+      militarRegistro: S.militar
+    };
+    await gsheets.salvarPassagem(reg);
+    nuvem = true;
+  } catch (e) { console.warn('Sync falhou:', e.message); }
+
+  // Histórico local
+  const hist = JSON.parse(localStorage.getItem('historico') || '[]');
+  hist.unshift({
+    unidade: u.nome, data: new Date().toISOString(),
+    sainte: document.getElementById('nomeSainte').value,
+    entrante: document.getElementById('nomeEntrante').value,
+    resumo: { ok, fal, ava }, obs
+  });
+  localStorage.setItem('historico', JSON.stringify(hist.slice(0, 50)));
+
+  alert(nuvem ? '✅ PDF gerado e registrado na planilha!' : '✅ PDF gerado! (salvo só localmente)');
+  voltarHome();
+}
+
+async function abrirHistorico() {
+  let hist = JSON.parse(localStorage.getItem('historico') || '[]');
+  try {
+    const nuvem = await gsheets.carregarHistorico();
+    if (nuvem.length) hist = nuvem;
+  } catch (e) { console.warn('Histórico offline:', e.message); }
+
+  if (!hist.length) return alert('📭 Nenhuma passagem registrada ainda');
+
+  const lista = hist.slice(0, 20).map((h, i) => {
+    const dt = new Date(h.data).toLocaleString('pt-BR');
+    const r  = h.resumo || { ok: 0, fal: 0, ava: 0 };
+    return `${i+1}. ${h.unidade} - ${dt}\n   ${h.sainte} → ${h.entrante}\n   ✅${r.ok} ❌${r.fal} ⚠️${r.ava}`;
+  }).join('\n\n');
+
+  alert('📜 ÚLTIMAS PASSAGENS:\n\n' + lista);
+}
+
+function voltarHome() {
+  document.querySelectorAll('#tela-conf, #tela-sign').forEach(t => t.classList.add('hidden'));
+  document.getElementById('tela-home').classList.remove('hidden');
+}
+
+// ══════════════════════════════════════════
+// DICA FLUTUANTE
+// ══════════════════════════════════════════
+const DICAS = [
+  { tit: '💡 Dica rápida', txt: 'Toque no logo 🚒 5 vezes para abrir o painel de admin.' },
+  { tit: '⚡ Modo Rápido', txt: 'No modo rápido todos os itens começam como OK — marque só as exceções.' },
+  { tit: '🎙️ Voz', txt: 'Diga "Lanterna OK" ou "Cordas faltando" com o microfone ativado.' },
+  { tit: '📸 Foto', txt: 'Itens avariados ou faltando permitem até 3 fotos — elas aparecem no PDF!' },
+  { tit: '📴 Offline', txt: 'O app funciona sem internet! O mapa fica salvo no celular.' }
+];
+let dicaAtual = 0;
+function toggleDica() {
+  const tip = document.getElementById('dicaTooltip');
+  if (tip.classList.contains('ativa')) {
+    tip.classList.remove('ativa'); return;
+  }
+  const d = DICAS[dicaAtual % DICAS.length];
+  document.getElementById('dicaTit').textContent = d.tit;
+  document.getElementById('dicaTxt').textContent = d.txt;
+  dicaAtual++;
+  tip.classList.add('ativa');
+}
+function fecharDica() {
+  document.getElementById('dicaTooltip').classList.remove('ativa');
+}
+
+// ══════════════════════════════════════════
+// TOUR DE BOAS-VINDAS
+// ══════════════════════════════════════════
+const TOUR_TELAS = [
+  {ico:'👋', tit:'Bem-vindo, bombeiro!', txt:'Você está no <strong>BombeiroCheck</strong>. Vou te mostrar tudo em 1 minuto!'},
+  {ico:'👤', tit:'Cadastre seu nome', txt:'Preencha seu <strong>nome de guerra</strong> e <strong>matrícula</strong> no card de Identificação.'},
+  {ico:'🚒', tit:'Escolha o que conferir', txt:'Toque em <strong>VIATURA</strong> ou <strong>SETOR</strong>. Os itens vêm direto da planilha Google!'},
+  {ico:'⚙️', tit:'Configure a passagem', txt:'Diga se você é <strong>SAINTE</strong> (saindo) ou <strong>ENTRANTE</strong> (entrando) e escolha o modo.'},
+  {ico:'✅', tit:'Confira os itens', txt:'Marque <strong>✅ OK</strong>, <strong>⚠️ Avariado</strong> ou <strong>❌ Faltando</strong>. Anexe fotos!'},
+  {ico:'✍️', tit:'Assine e gere o PDF', txt:'Sainte e entrante assinam na tela. O PDF é gerado e registrado na planilha!'},
+  {ico:'🎉', tit:'Tudo pronto!', txt:'O botão <strong>?</strong> azul dá dicas em qualquer tela. Bora começar!'}
+];
+let tourPasso = 0;
+
+function iniciarTour() {
+  tourPasso = 0;
+  document.getElementById('tourOverlay').classList.add('ativo');
+  renderTour();
+}
+function renderTour() {
+  const t   = TOUR_TELAS[tourPasso];
+  const tot = TOUR_TELAS.length;
+  const bols = Array.from({ length: tot }, (_, i) =>
+    `<div class="tour-bolinha ${i===tourPasso?'ativa':''}"></div>`).join('');
+  const ult = tourPasso === tot - 1;
+  document.getElementById('tourCard').innerHTML = `
+    <span class="tour-icone">${t.ico}</span>
+    <div class="tour-titulo">${t.tit}</div>
+    <div class="tour-texto">${t.txt}</div>
+    <div class="tour-progresso">${bols}</div>
+    <div class="tour-botoes">
+      ${tourPasso > 0 ? '<button class="tour-btn secundario" onclick="anteriorTour()">← Anterior</button>' : ''}
+      <button class="tour-btn primario" onclick="${ult ? 'finalizarTour()' : 'proximoTour()'}">${ult ? '🚀 Começar!' : 'Próximo →'}</button>
+    </div>`;
+}
+function proximoTour()  { if (tourPasso < TOUR_TELAS.length - 1) { tourPasso++; renderTour(); } }
+function anteriorTour() { if (tourPasso > 0) { tourPasso--; renderTour(); } }
+function pularTour() {
+  if (confirm('Pular o tutorial? Você pode revê-lo depois.')) finalizarTour();
+}
+function finalizarTour() {
+  document.getElementById('tourOverlay').classList.remove('ativo');
+  localStorage.setItem('tour_completado', 'sim');
+}
+</script>
+
+</body>
+</html>

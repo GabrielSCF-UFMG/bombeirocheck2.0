@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>🔧 Corretor de Mapa</title>
+<style>
+body{font-family:system-ui;background:#1a1a1a;color:#eee;padding:20px;max-width:900px;margin:0 auto}
+h1{color:#e74c3c}
+.box{background:#2a2a2a;padding:20px;border-radius:10px;margin:15px 0}
+button{background:#c0392b;color:#fff;border:none;padding:14px 24px;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;margin:5px}
+button:hover{background:#e74c3c}
+button.ok{background:#27ae60}
+.log{background:#000;color:#0f0;padding:15px;border-radius:8px;font-family:monospace;font-size:13px;max-height:400px;overflow-y:auto;white-space:pre-wrap}
+input[type=file]{padding:10px;background:#1a1a1a;color:#eee;border:2px dashed #555;border-radius:8px;width:100%}
+.stat{display:inline-block;padding:6px 12px;background:#34495e;border-radius:20px;margin:3px;font-size:13px}
+</style>
+</head>
+<body>
+
+<h1>🔧 Corretor Automático de Mapa de Carga</h1>
+
+<div class="box">
+  <h3>📥 1. Selecione o arquivo mapa-carga.json original</h3>
+  <input type="file" id="fileIn" accept=".json">
+</div>
+
+<div class="box" id="boxAcoes" style="display:none">
+  <h3>⚙️ 2. Correções a aplicar:</h3>
+  <ul style="line-height:1.8">
+    <li>✂️ Remover unidades duplicadas (ex: "Cópia de ABTS5911")</li>
+    <li>🏢 Reclassificar SOU, OFICINA, SETOR DE MEIOS, SALA DE MERGULHO como <b>SETOR</b></li>
+    <li>🚒 Garantir que ABTS, ATB, ASF, ACIF, ASM, ASL, UR sejam <b>VIATURA</b></li>
+    <li>🧹 Padronizar campo <code>tipo</code> em todas as unidades</li>
+  </ul>
+  <button class="ok" onclick="processar()">▶️ EXECUTAR CORREÇÕES</button>
+</div>
+
+<div class="box" id="boxLog" style="display:none">
+  <h3>📋 Log de execução:</h3>
+  <div id="log" class="log"></div>
+  <div id="stats" style="margin-top:15px"></div>
+</div>
+
+<div class="box" id="boxDownload" style="display:none">
+  <h3>💾 3. Baixe o arquivo corrigido:</h3>
+  <button class="ok" onclick="baixar()">⬇️ Baixar mapa-carga-corrigido.json</button>
+  <p style="margin-top:10px;color:#aaa;font-size:13px">
+    Depois é só abrir o app, fazer 5 cliques no logo, digitar a senha e importar este arquivo!
+  </p>
+</div>
+
+<script>
+let mapaOriginal = null;
+let mapaCorrigido = null;
+
+const log = (msg, cor='#0f0') => {
+  const l = document.getElementById('log');
+  l.innerHTML += `<span style="color:${cor}">${msg}</span>\n`;
+  l.scrollTop = l.scrollHeight;
+};
+
+document.getElementById('fileIn').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; if(!f) return;
+  try {
+    mapaOriginal = JSON.parse(await f.text());
+    document.getElementById('boxAcoes').style.display = 'block';
+    alert(`✅ Arquivo carregado: ${Object.keys(mapaOriginal).length} unidades encontradas`);
+  } catch(err){
+    alert('❌ JSON inválido: ' + err.message);
+  }
+});
+
+function classificarTipo(nome){
+  const n = nome.toUpperCase().trim();
+  // SETORES
+  if(n === 'SOU') return 'SETOR';
+  if(n.includes('OFICINA')) return 'SETOR';
+  if(n.includes('SETOR DE MEIOS') || n.includes('MEIOS')) return 'SETOR';
+  if(n.includes('SALA DE MERGULHO') || n.includes('MERGULHO')) return 'SETOR';
+  if(n.includes('SALA') || n.includes('SETOR')) return 'SETOR';
+  // VIATURAS por prefixo
+  if(/^(ABTS|ATB|ASF|ACIF|ASM|ASL|ASA|UR|USA|AT|AB)/.test(n)) return 'VIATURA';
+  // Default
+  return 'VIATURA';
+}
+
+function processar(){
+  document.getElementById('boxLog').style.display = 'block';
+  document.getElementById('log').innerHTML = '';
+  
+  log('🚀 Iniciando correções...\n');
+  mapaCorrigido = {};
+  
+  let removidas = 0, reclassificadas = 0, mantidas = 0;
+  let qtdViaturas = 0, qtdSetores = 0;
+  
+  for(const [nome, dados] of Object.entries(mapaOriginal)){
+    const nomeUp = nome.toUpperCase();
+    
+    // 1. REMOVER DUPLICATAS (Cópia de...)
+    if(nomeUp.includes('CÓPIA') || nomeUp.includes('COPIA') || nomeUp.startsWith('CÓPIA') || nomeUp.startsWith('COPIA')){
+      log(`✂️  REMOVIDA duplicata: "${nome}"`, '#ff6b6b');
+      removidas++;
+      continue;
+    }
+    
+    // 2. CLASSIFICAR TIPO CORRETO
+    const tipoNovo = classificarTipo(nome);
+    const tipoAntigo = dados.tipo || 'INDEFINIDO';
+    
+    if(tipoAntigo !== tipoNovo){
+      log(`🔄 RECLASSIFICADA: "${nome}" — ${tipoAntigo} → ${tipoNovo}`, '#f39c12');
+      reclassificadas++;
+    } else {
+      mantidas++;
+    }
+    
+    // 3. MONTAR OBJETO CORRIGIDO
+    mapaCorrigido[nome] = {
+      nome: nome,
+      tipo: tipoNovo,
+      compartimentos: dados.compartimentos || {}
+    };
+    
+    if(tipoNovo === 'VIATURA') qtdViaturas++;
+    else qtdSetores++;
+  }
+  
+  log(`\n✅ CONCLUÍDO!`);
+  log(`\n📊 Estatísticas:`);
+  log(`   • Removidas: ${removidas}`);
+  log(`   • Reclassificadas: ${reclassificadas}`);
+  log(`   • Mantidas: ${mantidas}`);
+  log(`   • Total final: ${Object.keys(mapaCorrigido).length}`);
+  
+  document.getElementById('stats').innerHTML = `
+    <span class="stat">🚒 ${qtdViaturas} viaturas</span>
+    <span class="stat">🏢 ${qtdSetores} setores</span>
+    <span class="stat">✂️ ${removidas} removidas</span>
+    <span class="stat">🔄 ${reclassificadas} reclassificadas</span>
+  `;
+  
+  document.getElementById('boxDownload').style.display = 'block';
+}
+
+function baixar(){
+  const blob = new Blob([JSON.stringify(mapaCorrigido, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mapa-carga-corrigido.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
