@@ -1,102 +1,142 @@
-// ============================================
-// BombeiroCheck Service Worker v3
-// 🔄 Mude o número abaixo a cada nova release!
-// ============================================
-const VERSAO = 'v3.0.1';
-const CACHE = `bombeirocheck-${VERSAO}`;
+// ══════════════════════════════════════════
+// BombeiroCheck — Service Worker
+// ══════════════════════════════════════════
+const VERSAO = 'v1.0';
+const CACHE_NAME = `bombeirocheck2.0-${VERSAO}`;
 
-const ARQUIVOS = [
+const ARQUIVOS_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192x192.png',
-  './icon-512x512.png'
+  './icon-192.png',
+  './icon-512.png'
 ];
 
-// ============================================
-// INSTALL: baixa arquivos e ATIVA NA HORA
-// ============================================
-self.addEventListener('install', e => {
-  console.log('[SW] Instalando', VERSAO);
-  e.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll(ARQUIVOS))
-      .then(() => self.skipWaiting()) // ⚡ Não espera fechar abas antigas
+// URLs que NUNCA devem ser interceptadas pelo SW
+const URL_IGNORAR = [
+  'script.google.com',   // Google Apps Script (Web App)
+  'googleapis.com',      // APIs Google
+  'gstatic.com',         // Assets Google
+  'jsdelivr.net',        // jsPDF CDN
+  'firebaseapp.com',     // Firebase (caso ainda exista alguma referência)
+  'firebaseio.com',
+  'firebase.google.com',
+  'google-analytics.com'
+];
+
+// ══════════════════════════════════════════
+// INSTALL — cacheia os arquivos essenciais
+// ══════════════════════════════════════════
+self.addEventListener('install', event => {
+  console.log('[SW] Instalando versão:', CACHE_NAME);
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ARQUIVOS_CACHE))
+      .then(() => self.skipWaiting())
+      .catch(err => console.warn('[SW] Erro no install:', err))
   );
 });
 
-// ============================================
-// ACTIVATE: limpa caches velhos e assume controle
-// ============================================
-self.addEventListener('activate', e => {
-  console.log('[SW] Ativando', VERSAO);
-  e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE)
-            .map(k => {
-              console.log('[SW] Apagando cache antigo:', k);
-              return caches.delete(k);
-            })
-      ))
-      .then(() => self.clients.claim()) // 🎯 Controla todas as abas abertas
+// ══════════════════════════════════════════
+// ACTIVATE — limpa caches antigos
+// ══════════════════════════════════════════
+self.addEventListener('activate', event => {
+  console.log('[SW] Ativando versão:', CACHE_NAME);
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(k => k !== CACHE_NAME)
+          .map(k => {
+            console.log('[SW] Removendo cache antigo:', k);
+            return caches.delete(k);
+          })
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// ============================================
-// FETCH: estratégia INTELIGENTE
-// - HTML/JS/CSS → Network First (sempre busca novo)
-// - Imagens/ícones → Cache First (rápido)
-// - Firebase/CDN → ignora (deixa direto)
-// ============================================
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  
-  const url = e.request.url;
-  
-  // Ignora Firebase, Google e CDNs (deixa o browser cuidar)
-  if (url.includes('firebase') || 
-      url.includes('gstatic') || 
-      url.includes('googleapis') ||
-      url.includes('jsdelivr')) {
+// ══════════════════════════════════════════
+// FETCH — estratégia por tipo de recurso
+// ══════════════════════════════════════════
+self.addEventListener('fetch', event => {
+  const url = event.request.url;
+
+  // 1️⃣ Ignora requisições que não devem ser cacheadas
+  const deveIgnorar = URL_IGNORAR.some(dominio => url.includes(dominio));
+  if (deveIgnorar) return;
+
+  // 2️⃣ Ignora requisições não-GET (POST do salvarPassagem, etc.)
+  if (event.request.method !== 'GET') return;
+
+  // 3️⃣ Ignora extensões de browser (chrome-extension, etc.)
+  if (!url.startsWith('http')) return;
+
+  // 4️⃣ CDN (jsPDF) → Network First com fallback para cache
+  if (url.includes('jsdelivr.net') || url.includes('cdn.')) {
+    event.respondWith(networkFirstComCache(event.request));
     return;
   }
-  
-  // Detecta se é arquivo "estático" (imagens, ícones)
-  const ehEstatico = url.match(/\.(png|jpg|jpeg|gif|svg|ico|woff2?)$/i);
-  
-  if (ehEstatico) {
-    // 🖼️ CACHE FIRST: imagens não mudam, serve rápido do cache
-    e.respondWith(
-      caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
-        const copy = resp.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy)).catch(()=>{});
-        return resp;
-      }))
-    );
-  } else {
-    // 🌐 NETWORK FIRST: HTML/JS sempre busca novo, cache só como fallback offline
-    e.respondWith(
-      fetch(e.request)
-        .then(resp => {
-          // Atualiza cache com a versão nova
-          const copy = resp.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy)).catch(()=>{});
-          return resp;
-        })
-        .catch(() => {
-          // Se offline, usa o cache
-          return caches.match(e.request).then(r => r || caches.match('./index.html'));
-        })
-    );
-  }
+
+  // 5️⃣ Arquivos locais do app → Cache First com fallback para rede
+  event.respondWith(cacheFirstComFallback(event.request));
 });
 
-// ============================================
-// MENSAGEM: permite o app forçar atualização
-// ============================================
-self.addEventListener('message', e => {
-  if (e.data === 'SKIP_WAITING') {
+// ══════════════════════════════════════════
+// ESTRATÉGIA: Cache First → fallback Network
+// Ideal para arquivos estáticos do app
+// ══════════════════════════════════════════
+async function cacheFirstComFallback(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200 && response.type !== 'opaque') {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    // Offline e não tem cache — retorna página principal como fallback
+    const fallback = await caches.match('./index.html');
+    if (fallback) return fallback;
+    return new Response('Offline — sem conexão', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  }
+}
+
+// ══════════════════════════════════════════
+// ESTRATÉGIA: Network First → fallback Cache
+// Ideal para CDNs e recursos externos
+// ══════════════════════════════════════════
+async function networkFirstComCache(request) {
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return new Response('Recurso externo indisponível offline', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  }
+}
+
+// ══════════════════════════════════════════
+// MENSAGENS — recebe sinal do index.html
+// para forçar atualização (skipWaiting)
+// ══════════════════════════════════════════
+self.addEventListener('message', event => {
+  if (event.data === 'SKIP_WAITING') {
+    console.log('[SW] Aplicando update por solicitação do app');
     self.skipWaiting();
   }
 });
